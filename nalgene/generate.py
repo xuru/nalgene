@@ -1,6 +1,7 @@
+import random
+
 from nalgene.parse import *
-import os
-import json
+
 
 # Generate tokens up to $value level
 
@@ -40,10 +41,11 @@ def walk_tree(root, current, context, start_w=0):
             # Existing value, pass in context
             try:
                 sub_context = context[child_key]
-                if sub_context is not None: print('sub context', sub_context)
+                if sub_context is not None:
+                    print('sub context', sub_context)
 
             except Exception:
-                #print('[ERROR] Key', child_key, 'not in', context)
+                # print('[ERROR] Key', child_key, 'not in', context)
                 sub_context = None
 
             try:
@@ -75,7 +77,6 @@ def walk_tree(root, current, context, start_w=0):
         else:
             has_value_parent, parent_line = current.has_parent('value')
             start_w += 1
-            len_w = 1
             if has_value_parent:
                 tree.type = 'value'
                 tree.key = '.'.join(parent_line)
@@ -86,14 +87,18 @@ def walk_tree(root, current, context, start_w=0):
 
     return flat, tree
 
+
 def fix_sentence(sentence):
     return fix_capitalization(fix_punctuation(fix_newlines(fix_spacing(sentence))))
+
 
 all_punctuation = ',.!?'
 end_punctuation = '.!?'
 
+
 def fix_capitalization(sentence):
     return ''.join(map(lambda s: s.capitalize(), re.split(r'([' + end_punctuation + ']\s*)', sentence)))
+
 
 def fix_punctuation(sentence):
     fixed = re.sub(r'\s([' + all_punctuation + '])', r'\1', sentence).strip()
@@ -101,11 +106,14 @@ def fix_punctuation(sentence):
         fixed = fixed + '.'
     return fixed
 
+
 def fix_newlines(sentence):
     return re.sub(r'\s*\\n\s*', '\n\n', sentence).strip()
 
+
 def fix_spacing(sentence):
     return re.sub(r'\s+', ' ', sentence)
+
 
 def generate_from_file(base_dir, filename, root_context=None):
     if root_context is None:
@@ -118,26 +126,3 @@ def generate_from_file(base_dir, filename, root_context=None):
     print(walked_tree)
     print('-' * 80)
     return parsed, walked_flat, walked_tree
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python generate.py [grammar].nlg")
-        sys.exit()
-
-    filename = os.path.realpath(sys.argv[1])
-    base_dir = os.path.dirname(filename)
-    filename = os.path.basename(filename)
-
-    test_json = json.load(open('test2.json'))
-    root_context = Node('%').add(parse_dict(test_json))
-
-    generate_from_file(base_dir, filename)#, root_context)
-
-# else:
-#     filename = sys.argv[1]
-#     base_dir = os.path.dirname(os.path.realpath(__file__))
-#     combined = os.path.join(base_dir, filename)
-#     base_dir = os.path.dirname(combined)
-#     filename = os.path.basename(combined)
-
-#     def generate(): return generate_from_file(base_dir, filename, Node('%'))
